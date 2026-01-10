@@ -12,5 +12,13 @@ pub fn main() !void {
     defer albums.deinit();
 
     const res: Album = try albums.getDailyAlbum();
-    print("Album: {s}\nArtists: {s}\nGenre: {s}\nYear: {s}\n", .{ res.album_name, res.artist, res.genre, res.year });
+    std.debug.print(
+        \\Album:   {s}
+        \\Artists: {s}
+        \\Genre:   {s}
+        \\Year:    {s}
+        \\
+    ,
+        .{ res.album_name, res.artist, res.genre, res.year },
+    );
 }

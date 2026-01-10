@@ -16,10 +16,20 @@ pub const AlbumsList = struct {
     pub fn init(self: *AlbumsList, allocator: std.mem.Allocator) !void {
         self.allocator = allocator;
 
-        const file = try std.fs.cwd().readFileAlloc(allocator, "albums.json", 1024 * 1024);
-        self.raw_json = file;
+        // const file = try std.fs.cwd().readFileAlloc(allocator, "albums.json", 1024 * 1024);
+        const json_path = "/Users/alon/Repo/zig/albumfetch-zig/albums.json";
+        const file = try std.fs.openFileAbsolute(json_path, .{ .mode = .read_only });
+        defer file.close();
+        const file_size = try file.getEndPos();
+        const buffer = try allocator.alloc(u8, file_size);
+        errdefer allocator.free(buffer);
+        const bytes_read = try file.readAll(buffer);
+        if (bytes_read != file_size) return error.FileReadIncomplete;
+        self.raw_json = buffer;
 
-        self.parsed_data = try std.json.parseFromSlice([][4][]const u8, allocator, file, .{});
+        const AlbumData = [][4][]const u8;
+
+        self.parsed_data = try std.json.parseFromSlice(AlbumData, allocator, buffer, .{});
         self.albums = self.parsed_data.?.value;
         self.size = self.parsed_data.?.value.len;
     }
