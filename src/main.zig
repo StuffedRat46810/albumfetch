@@ -11,6 +11,6 @@ pub fn main() !void {
     try albums.init(allocator);
     defer albums.deinit();
 
-    const res: Album = try albums.getRandomAlbum();
+    const res: Album = try albums.getDailyAlbum();
     print("Album: {s}\nArtists: {s}\nGenre: {s}\nYear: {s}\n", .{ res.album_name, res.artist, res.genre, res.year });
 }

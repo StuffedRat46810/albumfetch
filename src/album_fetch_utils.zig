@@ -24,6 +24,7 @@ pub const AlbumsList = struct {
         self.size = self.parsed_data.?.value.len;
     }
 
+    // these two function will probably move into their own struct.
     fn getRandomNumber(size: ?usize) !usize {
         var seed: u64 = 0;
         try std.posix.getrandom(std.mem.asBytes(&seed));
@@ -32,10 +33,30 @@ pub const AlbumsList = struct {
         return rand.intRangeLessThan(usize, 0, size.?);
     }
 
+    fn getDailyIndex(size: ?usize) !usize {
+        const now = std.time.timestamp();
+        const daysSinceEpoch = @as(u64, @intCast(@divFloor(now, 86400)));
+        var prng = std.Random.DefaultPrng.init(daysSinceEpoch);
+        const rand = prng.random();
+
+        return rand.intRangeLessThan(usize, 0, size.?);
+    }
+
     pub fn getRandomAlbum(self: *AlbumsList) !album_file.Album {
         if (self.albums == null or self.size == 0) return error.EmptyList;
         const randIndex = try getRandomNumber(self.size.?);
         const temp = self.albums.?[randIndex];
+        return album_file.Album{
+            .album_name = temp[0],
+            .artist = temp[1],
+            .genre = temp[2],
+            .year = temp[3],
+        };
+    }
+    pub fn getDailyAlbum(self: *AlbumsList) !album_file.Album {
+        if (self.albums == null or self.size == 0) return error.EmptyList;
+        const dailyIndex = try getDailyIndex(self.size.?);
+        const temp = self.albums.?[dailyIndex];
         return album_file.Album{
             .album_name = temp[0],
             .artist = temp[1],
