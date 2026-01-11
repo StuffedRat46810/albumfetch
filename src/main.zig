@@ -2,6 +2,7 @@ const std = @import("std");
 const print = std.debug.print;
 const album_file = @import("album.zig");
 const albums_utils = @import("album_fetch_utils.zig");
+const config_utils = @import("config_utils.zig");
 const Album = album_file.Album;
 
 const Command = enum {
@@ -24,8 +25,15 @@ pub fn main() !void {
     defer arena.deinit();
     errdefer arena.deinit();
     const allocator = arena.allocator();
+
+    const config = config_utils.Config.load(allocator) catch |err| {
+        print("Fatal error: could not load or create config: {}\n", .{err});
+        return;
+    };
+
     var albums = albums_utils.AlbumsList{};
-    albums.init("/Users/alon/Repo/zig/albumfetch-zig/albums.json", allocator) catch |err| {
+
+    albums.init(config.albums, allocator) catch |err| {
         print("ERROR: albums.init() has failed: {}\n", .{err});
         return;
     };
