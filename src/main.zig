@@ -3,7 +3,19 @@ const print = std.debug.print;
 const album_file = @import("album.zig");
 const albums_utils = @import("album_fetch_utils.zig");
 const Album = album_file.Album;
+
+const Command = enum {
+    random,
+    daily,
+};
+
 pub fn main() !void {
+    const args = std.os.argv;
+    if (std.os.argv.len <= 1) {
+        // this message needs some work
+        print("ERROR: albumfetch requires parameters to work", .{});
+        return;
+    }
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
 
@@ -16,10 +28,20 @@ pub fn main() !void {
         print("ERROR: albums.init() has failed: {}\n", .{err});
         return;
     };
-
-    const res: Album = albums.getDailyAlbum() catch |err| {
-        print("ERROR: getDailyAlbum() has failed: {}\n", .{err});
+    const input = std.mem.span(args[1]);
+    const cmd = std.meta.stringToEnum(Command, input) orelse {
+        print("Invalid command: {s}\n", .{input});
         return;
+    };
+    const res: Album = switch (cmd) {
+        .daily => albums.getDailyAlbum() catch |err| {
+            print("error: getDailyAlbum() has failed: {}\n", .{err});
+            return;
+        },
+        .random => albums.getRandomAlbum() catch |err| {
+            print("error: getRandomAlbum() has failed: {}\n", .{err});
+            return;
+        },
     };
     std.debug.print(
         \\Album:   {s}
