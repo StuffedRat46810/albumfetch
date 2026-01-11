@@ -7,6 +7,7 @@ const Album = album_file.Album;
 const Command = enum {
     random,
     daily,
+    help,
 };
 
 pub fn main() !void {
@@ -33,6 +34,10 @@ pub fn main() !void {
         print("Invalid command: {s}\n", .{input});
         return;
     };
+    if (cmd == .help) {
+        print("Usage: albumfetch [daily|random|help]\n", .{});
+        return;
+    }
     const res: Album = switch (cmd) {
         .daily => albums.getDailyAlbum() catch |err| {
             print("error: getDailyAlbum() has failed: {}\n", .{err});
@@ -42,6 +47,7 @@ pub fn main() !void {
             print("error: getRandomAlbum() has failed: {}\n", .{err});
             return;
         },
+        else => unreachable,
     };
     std.debug.print(
         \\Album:   {s}
