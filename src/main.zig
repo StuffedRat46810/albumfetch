@@ -12,7 +12,7 @@ pub fn main() !void {
     errdefer arena.deinit();
     const allocator = arena.allocator();
     var albums = albums_utils.AlbumsList{};
-    albums.init(allocator) catch |err| {
+    albums.init("/Users/alon/Repo/zig/albumfetch-zig/albums.json", allocator) catch |err| {
         print("ERROR: albums.init() has failed: {}\n", .{err});
         return;
     };
