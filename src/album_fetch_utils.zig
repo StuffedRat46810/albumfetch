@@ -38,9 +38,9 @@ pub const AlbumsList = struct {
         var prng: std.Random.DefaultPrng = .init(seed);
         const rand = prng.random();
         const index = rand.intRangeLessThan(usize, 0, self.size.?);
-        return try self.getNthAlbum(index);
+        return self.getNthAlbum(index);
     }
-    pub fn getNthAlbum(self: *AlbumsList, n: usize) !album_file.Album {
+    pub fn getNthAlbum(self: *AlbumsList, n: usize) album_file.Album {
         const temp = self.albums.?[n];
         return album_file.Album{
             .album_name = temp[0],
@@ -55,6 +55,6 @@ pub const AlbumsList = struct {
         var prng = std.Random.DefaultPrng.init(daysSinceEpoch);
         const rand = prng.random();
         const index = rand.intRangeLessThan(usize, 0, self.size.?);
-        return try self.getNthAlbum(index);
+        return self.getNthAlbum(index);
     }
 };

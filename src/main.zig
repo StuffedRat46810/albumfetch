@@ -9,11 +9,18 @@ pub fn main() !void {
 
     var arena = std.heap.ArenaAllocator.init(gpa.allocator());
     defer arena.deinit();
+    errdefer arena.deinit();
     const allocator = arena.allocator();
     var albums = albums_utils.AlbumsList{};
-    try albums.init(allocator);
+    albums.init(allocator) catch |err| {
+        print("ERROR: albums.init() has failed: {}\n", .{err});
+        return;
+    };
 
-    const res: Album = try albums.getDailyAlbum();
+    const res: Album = albums.getDailyAlbum() catch |err| {
+        print("ERROR: getDailyAlbum() has failed: {}\n", .{err});
+        return;
+    };
     std.debug.print(
         \\Album:   {s}
         \\Artists: {s}
