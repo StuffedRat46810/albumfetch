@@ -31,27 +31,17 @@ pub const AlbumsList = struct {
     }
 
     // these two function will probably move into their own struct.
-    fn getRandomNumber(size: ?usize) !usize {
+
+    pub fn getRandomAlbum(self: *AlbumsList) !album_file.Album {
         var seed: u64 = 0;
         try std.posix.getrandom(std.mem.asBytes(&seed));
         var prng: std.Random.DefaultPrng = .init(seed);
         const rand = prng.random();
-        return rand.intRangeLessThan(usize, 0, size.?);
+        const index = rand.intRangeLessThan(usize, 0, self.size.?);
+        return try self.getNthAlbum(index);
     }
-
-    fn getDailyIndex(size: ?usize) !usize {
-        const now = std.time.timestamp();
-        const daysSinceEpoch = @as(u64, @intCast(@divFloor(now, 86400)));
-        var prng = std.Random.DefaultPrng.init(daysSinceEpoch);
-        const rand = prng.random();
-
-        return rand.intRangeLessThan(usize, 0, size.?);
-    }
-
-    pub fn getRandomAlbum(self: *AlbumsList) !album_file.Album {
-        if (self.albums == null or self.size == 0) return error.EmptyList;
-        const randIndex = try getRandomNumber(self.size.?);
-        const temp = self.albums.?[randIndex];
+    pub fn getNthAlbum(self: *AlbumsList, n: usize) !album_file.Album {
+        const temp = self.albums.?[n];
         return album_file.Album{
             .album_name = temp[0],
             .artist = temp[1],
@@ -60,18 +50,11 @@ pub const AlbumsList = struct {
         };
     }
     pub fn getDailyAlbum(self: *AlbumsList) !album_file.Album {
-        if (self.albums == null or self.size == 0) return error.EmptyList;
-        const dailyIndex = try getDailyIndex(self.size.?);
-        const temp = self.albums.?[dailyIndex];
-        return album_file.Album{
-            .album_name = temp[0],
-            .artist = temp[1],
-            .genre = temp[2],
-            .year = temp[3],
-        };
-    }
-
-    pub fn deinit(self: *AlbumsList) void {
-        _ = self;
+        const now = std.time.timestamp();
+        const daysSinceEpoch = @as(u64, @intCast(@divFloor(now, 86400)));
+        var prng = std.Random.DefaultPrng.init(daysSinceEpoch);
+        const rand = prng.random();
+        const index = rand.intRangeLessThan(usize, 0, self.size.?);
+        return try self.getNthAlbum(index);
     }
 };
