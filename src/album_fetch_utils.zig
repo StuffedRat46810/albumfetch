@@ -6,15 +6,12 @@ const AlbumErrors = error{
 };
 pub const AlbumsList = struct {
     // these 2 specific attributes make sure the data doesn't turn into garbage
-    raw_json: ?[]u8 = null,
-    allocator: ?std.mem.Allocator = null,
 
     parsed_data: ?std.json.Parsed([][4][]const u8) = null,
     albums: ?[][4][]const u8 = null,
     size: ?usize = null,
 
     pub fn init(self: *AlbumsList, allocator: std.mem.Allocator) !void {
-        self.allocator = allocator;
 
         // const file = try std.fs.cwd().readFileAlloc(allocator, "albums.json", 1024 * 1024);
         const json_path = "/Users/alon/Repo/zig/albumfetch-zig/albums.json";
@@ -25,7 +22,6 @@ pub const AlbumsList = struct {
         errdefer allocator.free(buffer);
         const bytes_read = try file.readAll(buffer);
         if (bytes_read != file_size) return error.FileReadIncomplete;
-        self.raw_json = buffer;
 
         const AlbumData = [][4][]const u8;
 
@@ -76,16 +72,6 @@ pub const AlbumsList = struct {
     }
 
     pub fn deinit(self: *AlbumsList) void {
-        // deletes the json object
-        if (self.parsed_data) |p| {
-            p.deinit();
-        }
-        // deletes the file buffer.
-        // turns out deleting the file buffer in the init function fucks up the program real bad
-        if (self.raw_json) |raw| {
-            if (self.allocator) |alloc| {
-                alloc.free(raw);
-            }
-        }
+        _ = self;
     }
 };

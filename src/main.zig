@@ -6,10 +6,12 @@ const Album = album_file.Album;
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+
+    var arena = std.heap.ArenaAllocator.init(gpa.allocator());
+    defer arena.deinit();
+    const allocator = arena.allocator();
     var albums = albums_utils.AlbumsList{};
     try albums.init(allocator);
-    defer albums.deinit();
 
     const res: Album = try albums.getDailyAlbum();
     std.debug.print(
