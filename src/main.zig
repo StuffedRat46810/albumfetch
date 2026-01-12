@@ -7,6 +7,9 @@ const log_file = @import("logger.zig");
 const clap = @import("clap");
 const Album = album_file.Album;
 
+pub const cyan = "\x1b[36m";
+pub const reset = "\x1b[0m";
+
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
@@ -68,13 +71,12 @@ pub fn main() !void {
         res = try albums.getDailyAlbum(null);
     }
     try logger.info(
-        \\Album:   {s}
-        \\Artists: {s}
-        \\Genre:   {s}
-        \\Year:    {s}
+        \\{s:<12}{s} {s}
+        \\{s:<12}{s} {s}
+        \\{s:<12}{s} {s}
+        \\{s:<12}{s} {s}
         \\
     ,
-        .{ res.?.album_name, res.?.artist, res.?.genre, res.?.year },
+        .{ cyan, "Album:", reset, res.?.album_name, cyan, "Artists:", reset, res.?.artist, cyan, "Genre:", reset, res.?.genre, cyan, "Year:", reset, res.?.year },
     );
-    try logger.flush();
 }
