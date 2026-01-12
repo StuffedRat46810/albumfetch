@@ -42,7 +42,7 @@ pub fn build(b: *std.Build) void {
     });
 
     const album_utils_mod = b.createModule(.{
-        .root_source_file = b.path("src/album_fetch_utils.zig"),
+        .root_source_file = b.path("src/album_utils.zig"),
         .link_libc = true,
     });
 

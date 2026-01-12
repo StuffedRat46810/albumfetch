@@ -1,7 +1,7 @@
 const std = @import("std");
 const print = std.debug.print;
 const album_file = @import("album.zig");
-const albums_utils = @import("album_fetch_utils.zig");
+const albums_utils = @import("album_utils.zig");
 const config_utils = @import("config_utils.zig");
 const Album = album_file.Album;
 
