@@ -18,6 +18,7 @@ pub fn main() !void {
     var stdout_buf: [1024]u8 = undefined;
     var stderr_buf: [1024]u8 = undefined;
     var logger = log_file.Logger.init(&stdout_buf, &stderr_buf);
+    defer logger.flush() catch {};
 
     const params = comptime clap.parseParamsComptime(
         \\-h, --help        Display this help and exit.
@@ -38,7 +39,7 @@ pub fn main() !void {
 
     if (argsRes.args.help != 0 or args_count == 1) {
         try logger.info("Usage: albumfetch [options]\n", .{});
-        try clap.help(@ptrCast(&logger.stderr_writer), clap.Help, &params, .{});
+        try clap.help(&logger.stderr_writer.interface, clap.Help, &params, .{});
         return;
     }
 
