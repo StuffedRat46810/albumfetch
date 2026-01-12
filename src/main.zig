@@ -3,22 +3,11 @@ const print = std.debug.print;
 const album_file = @import("album.zig");
 const albums_utils = @import("album_utils.zig");
 const config_utils = @import("config_utils.zig");
+const log_file = @import("logger.zig");
 const clap = @import("clap");
 const Album = album_file.Album;
 
-const Command = enum {
-    random,
-    daily,
-    help,
-};
-
 pub fn main() !void {
-    // const args = std.os.argv;
-    // if (std.os.argv.len <= 1) {
-    //     // this message needs some work
-    //     print("ERROR: albumfetch requires parameters to work", .{});
-    //     return;
-    // }
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
 
@@ -26,6 +15,9 @@ pub fn main() !void {
     defer arena.deinit();
     errdefer arena.deinit();
     const allocator = arena.allocator();
+    var stdout_buf: [1024]u8 = undefined;
+    var stderr_buf: [1024]u8 = undefined;
+    var logger = log_file.Logger.init(&stdout_buf, &stderr_buf);
 
     const params = comptime clap.parseParamsComptime(
         \\-h, --help        Display this help and exit.
@@ -37,7 +29,7 @@ pub fn main() !void {
     var argsRes = clap.parse(clap.Help, &params, clap.parsers.default, .{
         .allocator = allocator,
     }) catch |err| {
-        print("Error parsing arguments: {}\n", .{err});
+        try logger.err("Error parsing arguments: {}\n", .{err});
         return;
     };
     defer argsRes.deinit();
@@ -45,31 +37,25 @@ pub fn main() !void {
     const args_count = std.os.argv.len;
 
     if (argsRes.args.help != 0 or args_count == 1) {
-        var stderr_buf: [1024]u8 = undefined;
-        var stderr_writer = std.fs.File.stderr().writer(&stderr_buf);
-        const stderr = &stderr_writer.interface;
-
-        try stderr.print("Usage: albumfetch [options]\n", .{});
-        // i got a gut feeling this line doesn't work
-        try clap.help(stderr, clap.Help, &params, .{});
-        try stderr.flush();
+        try logger.info("Usage: albumfetch [options]\n", .{});
+        try clap.help(@ptrCast(&logger.stderr_writer), clap.Help, &params, .{});
         return;
     }
 
     if (argsRes.args.version != 0) {
-        print("albumfetch version 0.0.1\n", .{});
+        try logger.err("albumfetch version 0.0.1\n", .{});
         return;
     }
 
     const config = config_utils.Config.load(allocator) catch |err| {
-        print("Fatal error: could not load or create config: {}\n", .{err});
+        try logger.err("Fatal error: could not load or create config: {}\n", .{err});
         return;
     };
 
     var albums = albums_utils.AlbumsList{};
 
     albums.init(config.albums, allocator) catch |err| {
-        print("ERROR: albums.init() has failed: {}\n", .{err});
+        try logger.err("ERROR: albums.init() has failed: {}\n", .{err});
         return;
     };
 
@@ -80,18 +66,7 @@ pub fn main() !void {
     } else if (argsRes.args.daily != 0) {
         res = try albums.getDailyAlbum(null);
     }
-    // const res: Album = switch (cmd) {
-    //     .daily => albums.getDailyAlbum(null) catch |err| {
-    //         print("error: getDailyAlbum() has failed: {}\n", .{err});
-    //         return;
-    //     },
-    //     .random => albums.getRandomAlbum() catch |err| {
-    //         print("error: getRandomAlbum() has failed: {}\n", .{err});
-    //         return;
-    //     },
-    //     else => unreachable,
-    // };
-    std.debug.print(
+    try logger.info(
         \\Album:   {s}
         \\Artists: {s}
         \\Genre:   {s}
@@ -100,4 +75,5 @@ pub fn main() !void {
     ,
         .{ res.?.album_name, res.?.artist, res.?.genre, res.?.year },
     );
+    try logger.flush();
 }
