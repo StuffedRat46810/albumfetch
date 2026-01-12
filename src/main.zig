@@ -47,7 +47,7 @@ pub fn main() !void {
         return;
     }
     const res: Album = switch (cmd) {
-        .daily => albums.getDailyAlbum() catch |err| {
+        .daily => albums.getDailyAlbum(null) catch |err| {
             print("error: getDailyAlbum() has failed: {}\n", .{err});
             return;
         },

@@ -41,6 +41,11 @@ pub fn build(b: *std.Build) void {
         .target = target,
     });
 
+    const album_utils_mod = b.createModule(.{
+        .root_source_file = b.path("src/album_fetch_utils.zig"),
+        .link_libc = true,
+    });
+
     // Here we define an executable. An executable needs to have a root module
     // which needs to expose a `main` function. While we could add a main function
     // to the module defined above, it's sometimes preferable to split business
@@ -63,8 +68,11 @@ pub fn build(b: *std.Build) void {
             .root_source_file = b.path("src/main.zig"),
             .target = target,
             .optimize = optimize,
+            .link_libc = true,
         }),
     });
+
+    exe.root_module.addImport("album_utils", album_utils_mod);
 
     if (optimize != .Debug) {
         exe.root_module.strip = true;
@@ -115,10 +123,16 @@ pub fn build(b: *std.Build) void {
     // root module. Note that test executables only test one module at a time,
     // hence why we have to create two separate ones.
     const exe_tests = b.addTest(.{
-        .root_module = exe.root_module,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/tests.zig"),
+            .target = target,
+            .optimize = optimize,
+            .link_libc = true,
+        }),
     });
 
     // A run step that will run the second test executable.
+    exe_tests.root_module.addImport("album_utils", album_utils_mod);
     const run_exe_tests = b.addRunArtifact(exe_tests);
 
     // A top level step for running all tests. dependOn can be called multiple

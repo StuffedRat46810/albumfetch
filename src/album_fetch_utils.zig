@@ -1,4 +1,5 @@
 const std = @import("std");
+const time = @import("time.zig");
 const album_file = @import("album.zig");
 const AlbumErrors = error{
     file_error,
@@ -53,12 +54,26 @@ pub const AlbumsList = struct {
             .year = temp[3],
         };
     }
-    pub fn getDailyAlbum(self: *AlbumsList) !album_file.Album {
-        const now = std.time.timestamp();
-        const daysSinceEpoch = @as(u64, @intCast(@divFloor(now, 86400)));
+    pub fn getDailyAlbum(self: *AlbumsList, manual_now: ?i64) !album_file.Album {
+        const now = manual_now orelse std.time.timestamp();
+        const offset_seconds = time.getLocalTimeOffset();
+
+        const local_now = now + offset_seconds;
+        const seconds_in_day = 86400;
+        const daysSinceEpoch = @as(u64, @intCast(@divFloor(local_now, seconds_in_day)));
+
         var prng = std.Random.DefaultPrng.init(daysSinceEpoch);
         const rand = prng.random();
-        const index = rand.intRangeLessThan(usize, 0, self.size.?);
+
+        // Ensure the size is vaild before picking the index
+        const max_idx = self.size orelse return error.AlbumNotInitialized;
+        const index = rand.intRangeLessThan(usize, 0, max_idx);
+
         return self.getNthAlbum(index);
+    }
+    pub fn deinit(self: *AlbumsList) void {
+        if (self.parsed_data) |p| {
+            p.deinit();
+        }
     }
 };
