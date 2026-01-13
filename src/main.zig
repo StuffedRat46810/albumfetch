@@ -65,12 +65,6 @@ pub fn main() !void {
     };
 
     var res: ?Album = null;
-    const is_tty = std.fs.File.stdout().isTty();
-    const label_c = config.theme.label.toAnsi(is_tty);
-    const album_c = config.theme.album.toAnsi(is_tty);
-    const artist_c = config.theme.artist.toAnsi(is_tty);
-    const genre_c = config.theme.genre.toAnsi(is_tty);
-    const year_c = config.theme.year.toAnsi(is_tty);
 
     if (argsRes.args.random != 0) {
         res = try albums.getRandomAlbum();
@@ -78,14 +72,22 @@ pub fn main() !void {
         res = try albums.getDailyAlbum(null);
     }
 
-    const r = if (is_tty) reset else "";
     if (res) |album| {
-        try logger.info(
-            \\{s}{s:<12}{s} {s}{s}{s}
-            \\{s}{s:<12}{s} {s}{s}{s}
-            \\{s}{s:<12}{s} {s}{s}{s}
-            \\{s}{s:<12}{s} {s}{s}{s}
-            \\
-        , .{ label_c, "Album:", r, album_c, album.album_name, r, label_c, "Artists:", r, artist_c, album.artist, r, label_c, "Genre:", r, genre_c, album.genre, r, label_c, "Year:", r, year_c, album.year, r });
+        const is_tty = std.fs.File.stdout().isTty();
+        try logger.printColored("Album:      ", config.theme.label, is_tty);
+        try logger.printColored(album.album_name, config.theme.album, is_tty);
+        try logger.info("\n", .{});
+
+        try logger.printColored("Artist:     ", config.theme.label, is_tty);
+        try logger.printColored(album.artist, config.theme.artist, is_tty);
+        try logger.info("\n", .{});
+
+        try logger.printColored("Genre:      ", config.theme.label, is_tty);
+        try logger.printColored(album.genre, config.theme.genre, is_tty);
+        try logger.info("\n", .{});
+
+        try logger.printColored("Year:       ", config.theme.label, is_tty);
+        try logger.printColored(album.year, config.theme.year, is_tty);
+        try logger.info("\n\n", .{});
     }
 }

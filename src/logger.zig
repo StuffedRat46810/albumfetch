@@ -1,4 +1,6 @@
 const std = @import("std");
+const color_utils = @import("color_utils.zig");
+const Color = color_utils.Color;
 
 // this struct exists as a workaround for printing to stdout or stdin.
 // hopefully when zig 0.16 will release this problem will be solved.
@@ -31,5 +33,13 @@ pub const Logger = struct {
     pub fn flush(self: *Logger) !void {
         try (&self.stdout_writer.interface).flush();
         try (&self.stderr_writer.interface).flush();
+    }
+
+    pub fn printColored(self: *Logger, text: []const u8, color: Color, is_tty: bool) !void {
+        const w: *std.Io.Writer = &self.stdout_writer.interface;
+        const color_code = color.toAnsi(is_tty);
+        const reset = if (is_tty) Color.reset else "";
+
+        try w.print("{s}{s}{s}", .{ color_code, text, reset });
     }
 };
