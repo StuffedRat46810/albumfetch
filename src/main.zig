@@ -65,13 +65,12 @@ pub fn main() !void {
     };
 
     var res: ?Album = null;
-
-    // currently is_tty is hardcoded to false.
-    const label_c = config.theme.label.toAnsi(false);
-    const album_c = config.theme.album.toAnsi(false);
-    const artist_c = config.theme.artist.toAnsi(false);
-    const genre_c = config.theme.genre.toAnsi(false);
-    const year_c = config.theme.year.toAnsi(false);
+    const is_tty = std.fs.File.stdout().isTty();
+    const label_c = config.theme.label.toAnsi(is_tty);
+    const album_c = config.theme.album.toAnsi(is_tty);
+    const artist_c = config.theme.artist.toAnsi(is_tty);
+    const genre_c = config.theme.genre.toAnsi(is_tty);
+    const year_c = config.theme.year.toAnsi(is_tty);
 
     if (argsRes.args.random != 0) {
         res = try albums.getRandomAlbum();
