@@ -40,6 +40,7 @@ pub const Logger = struct {
         const color_code = color.toAnsi(is_tty);
         const reset = if (is_tty) Color.reset else "";
 
-        try w.print("{s}{s}{s}", .{ color_code, text, reset });
+        // the width is going to be baked into the print for now.
+        try w.print("{s}{s:<12}{s}", .{ color_code, text, reset });
     }
 };
