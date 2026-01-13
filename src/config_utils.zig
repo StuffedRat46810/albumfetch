@@ -1,12 +1,15 @@
 const std = @import("std");
-
+const color_utils = @import("color_utils.zig");
 const default_data = @embedFile("albums.json");
 
-// very high chance this struct will change
+const Color = color_utils.Color;
+const Theme = color_utils.Theme;
+
 pub const Config = struct {
     albums: []const u8,
+    theme: Theme = .{},
 
-    pub fn load(allocator: std.mem.Allocator) !Config {
+    pub fn load(allocator: std.mem.Allocator) !std.json.Parsed(Config) {
         const path = try ensureConfigExists(allocator);
         defer allocator.free(path); // this might cause problems later
 
@@ -15,13 +18,12 @@ pub const Config = struct {
 
         const size = try file.getEndPos();
         const buffer = try allocator.alloc(u8, size);
+        // defer allocator.free(buffer);
         _ = try file.readAll(buffer);
 
-        const parsed = try std.json.parseFromSlice(Config, allocator, buffer, .{
+        return try std.json.parseFromSlice(Config, allocator, buffer, .{
             .ignore_unknown_fields = true,
         });
-
-        return parsed.value;
     }
 
     fn ensureConfigExists(allocator: std.mem.Allocator) ![]u8 {
@@ -52,7 +54,13 @@ pub const Config = struct {
                 defer f.close();
                 const template = try std.fmt.allocPrint(allocator,
                     \\{{
-                    \\  "albums": "{s}"
+                    \\  "albums": "{s}",
+                    \\  "theme": {{
+                    \\      "label": "cyan",
+                    \\      "album": "none",
+                    \\      "artist": "none",
+                    \\      "genre": "none",
+                    \\      "year": "none",
                     \\}}
                 , .{default_albums_path});
                 try f.writeAll(template);

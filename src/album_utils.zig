@@ -7,20 +7,17 @@ const AlbumErrors = error{
     null_json,
 };
 pub const AlbumsList = struct {
-    // these 2 specific attributes make sure the data doesn't turn into garbage
-
     parsed_data: ?std.json.Parsed([][4][]const u8) = null,
     albums: ?[][4][]const u8 = null,
     size: ?usize = null,
 
     pub fn init(self: *AlbumsList, json_path: ?[]const u8, allocator: std.mem.Allocator) !void {
-
         // const file = try std.fs.cwd().readFileAlloc(allocator, "albums.json", 1024 * 1024);
         const json_path_len = if (json_path) |n| n.len else 0;
         if (json_path_len == 0) {
             return AlbumErrors.null_json;
         }
-        const file = try std.fs.openFileAbsolute(json_path.?, .{ .mode = .read_only });
+        const file = try std.fs.cwd().openFile(json_path.?, .{ .mode = .read_only });
         defer file.close();
         const file_size = try file.getEndPos();
         const buffer = try allocator.alloc(u8, file_size);

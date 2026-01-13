@@ -7,7 +7,6 @@ const log_file = @import("logger.zig");
 const clap = @import("clap");
 const Album = album_file.Album;
 
-pub const cyan = "\x1b[36m";
 pub const reset = "\x1b[0m";
 
 pub fn main() !void {
@@ -51,10 +50,12 @@ pub fn main() !void {
         return;
     }
 
-    const config = config_utils.Config.load(allocator) catch |err| {
+    const config_parsed = config_utils.Config.load(allocator) catch |err| {
         try logger.err("Fatal error: could not load or create config: {}\n", .{err});
         return;
     };
+    defer config_parsed.deinit();
+    const config = config_parsed.value;
 
     var albums = albums_utils.AlbumsList{};
 
@@ -65,18 +66,29 @@ pub fn main() !void {
 
     var res: ?Album = null;
 
+    // currently is_tty is hardcoded to false.
+    const label_c = config.theme.label.toAnsi(false);
+    const album_c = config.theme.album.toAnsi(false);
+    const artist_c = config.theme.artist.toAnsi(false);
+    const genre_c = config.theme.genre.toAnsi(false);
+    const year_c = config.theme.year.toAnsi(false);
+
     if (argsRes.args.random != 0) {
         res = try albums.getRandomAlbum();
     } else if (argsRes.args.daily != 0) {
         res = try albums.getDailyAlbum(null);
     }
-    try logger.info(
-        \\{s:<12}{s} {s}
-        \\{s:<12}{s} {s}
-        \\{s:<12}{s} {s}
-        \\{s:<12}{s} {s}
-        \\
-    ,
-        .{ cyan, "Album:", reset, res.?.album_name, cyan, "Artists:", reset, res.?.artist, cyan, "Genre:", reset, res.?.genre, cyan, "Year:", reset, res.?.year },
-    );
+    if (res) |album| {
+        try logger.info(
+            \\{s}{s:<12}{s} {s}
+            \\{s}{s:<12}{s} {s}
+            \\{s}{s:<12}{s} {s}
+            \\{s}{s:<12}{s} {s}
+            \\
+        ,
+            .{ label_c, "Album:", album_c, album.album_name, label_c, "Artists:", artist_c, album.artist, label_c, "Genre:", genre_c, album.genre, label_c, "Year:", year_c, album.year },
+        );
+    } else {
+        try logger.err("Error: Please specify -r (random) or -d (daily) to pick an album.\n", .{});
+    }
 }

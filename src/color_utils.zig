@@ -29,3 +29,11 @@ pub const Color = enum {
 
     pub const reset = "\x1b[0m";
 };
+
+pub const Theme = struct {
+    label: Color = .cyan,
+    album: Color = .none,
+    artist: Color = .none,
+    genre: Color = .none,
+    year: Color = .none,
+};
