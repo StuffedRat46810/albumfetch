@@ -75,7 +75,7 @@ pub fn main() !void {
     if (res) |album| {
         const is_tty = std.fs.File.stdout().isTty();
 
-        try logger.printColored("Album:      ", config.theme.label, is_tty);
+        try logger.printColored("Album", config.theme.label, is_tty);
         try logger.printColored(album.album_name, config.theme.album, is_tty);
         try logger.info("\n", .{});
 
