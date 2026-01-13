@@ -77,17 +77,15 @@ pub fn main() !void {
     } else if (argsRes.args.daily != 0) {
         res = try albums.getDailyAlbum(null);
     }
+
+    const r = if (is_tty) reset else "";
     if (res) |album| {
         try logger.info(
-            \\{s}{s:<12}{s} {s}
-            \\{s}{s:<12}{s} {s}
-            \\{s}{s:<12}{s} {s}
-            \\{s}{s:<12}{s} {s}
+            \\{s}{s:<12}{s} {s}{s}{s}
+            \\{s}{s:<12}{s} {s}{s}{s}
+            \\{s}{s:<12}{s} {s}{s}{s}
+            \\{s}{s:<12}{s} {s}{s}{s}
             \\
-        ,
-            .{ label_c, "Album:", album_c, album.album_name, label_c, "Artists:", artist_c, album.artist, label_c, "Genre:", genre_c, album.genre, label_c, "Year:", year_c, album.year },
-        );
-    } else {
-        try logger.err("Error: Please specify -r (random) or -d (daily) to pick an album.\n", .{});
+        , .{ label_c, "Album:", r, album_c, album.album_name, r, label_c, "Artists:", r, artist_c, album.artist, r, label_c, "Genre:", r, genre_c, album.genre, r, label_c, "Year:", r, year_c, album.year, r });
     }
 }
