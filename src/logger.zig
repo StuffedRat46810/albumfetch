@@ -2,7 +2,7 @@ const std = @import("std");
 const color_utils = @import("color_utils.zig");
 const Color = color_utils.Color;
 
-// this struct exists as a workaround for printing to stdout or stdin.
+// this struct exists as a workaround for printing to stdout or stderr.
 // hopefully when zig 0.16 will release this problem will be solved.
 pub const Logger = struct {
     stdout_buf: []u8,
