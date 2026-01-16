@@ -13,11 +13,6 @@ pub fn build(b: *std.Build) void {
     const build_options = b.addOptions();
     build_options.addOption([]const u8, "version", version);
 
-    const mod = b.addModule("albumfetch_zig", .{
-        .root_source_file = b.path("src/root.zig"),
-        .target = target,
-    });
-
     const album_utils_mod = b.createModule(.{
         .root_source_file = b.path("src/album_utils.zig"),
         .link_libc = true,
@@ -77,12 +72,12 @@ pub fn build(b: *std.Build) void {
     // Creates an executable that will run `test` blocks from the provided module.
     // Here `mod` needs to define a target, which is why earlier we made sure to
     // set the releative field.
-    const mod_tests = b.addTest(.{
-        .root_module = mod,
-    });
-
-    // A run step that will run the test executable.
-    const run_mod_tests = b.addRunArtifact(mod_tests);
+    // const mod_tests = b.addTest(.{
+    //     .root_module = b.path(""),
+    // });
+    //
+    // // A run step that will run the test executable.
+    // const run_mod_tests = b.addRunArtifact(mod_tests);
 
     // Creates an executable that will run `test` blocks from the executable's
     // root module. Note that test executables only test one module at a time,
@@ -100,11 +95,8 @@ pub fn build(b: *std.Build) void {
     exe_tests.root_module.addImport("config_utils", config_utils_mod);
     const run_exe_tests = b.addRunArtifact(exe_tests);
 
-    // A top level step for running all tests. dependOn can be called multiple
-    // times and since the two run steps do not depend on one another, this will
-    // make the two of them run in parallel.
     const test_step = b.step("test", "Run tests");
-    test_step.dependOn(&run_mod_tests.step);
+    // test_step.dependOn(&run_mod_tests.step);
     test_step.dependOn(&run_exe_tests.step);
 
     // Just like flags, top level steps are also listed in the `--help` menu.
