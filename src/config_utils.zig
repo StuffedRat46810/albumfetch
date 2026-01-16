@@ -57,10 +57,11 @@ pub const Config = struct {
                     \\  "albums": "{s}",
                     \\  "theme": {{
                     \\      "label": "cyan",
-                    \\      "album": "none",
-                    \\      "artist": "none",
-                    \\      "genre": "none",
-                    \\      "year": "none",
+                    \\      "album": "white",
+                    \\      "artist": "white",
+                    \\      "genre": "white",
+                    \\      "year": "white"
+                    \\  }}
                     \\}}
                 , .{default_albums_path});
                 try f.writeAll(template);
