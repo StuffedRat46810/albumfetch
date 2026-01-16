@@ -1,6 +1,7 @@
 const std = @import("std");
 const print = std.debug.print;
 const album_file = @import("album.zig");
+const build_options = @import("build_options");
 const albums_utils = @import("album_utils.zig");
 const config_utils = @import("config_utils.zig");
 const log_file = @import("logger.zig");
@@ -8,6 +9,7 @@ const clap = @import("clap");
 const Album = album_file.Album;
 
 pub const reset = "\x1b[0m";
+pub const version = build_options.version;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -46,7 +48,7 @@ pub fn main() !void {
     }
 
     if (argsRes.args.version != 0) {
-        try logger.err("albumfetch version 0.0.1\n", .{});
+        try logger.err("albumfetch version {s}\n", .{version});
         return;
     }
 
