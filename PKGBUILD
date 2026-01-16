@@ -1,6 +1,6 @@
 # Maintainer: Alon Levy alon@moranoa.com
 pkgname=albumfetch
-pkgver=0.1.0
+pkgver=0.1.1
 pkgrel=1
 pkgdesc="A CLI tool written in Zig that displays random albums in the terminal"
 arch=('x86_64')
