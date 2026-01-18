@@ -17,7 +17,6 @@ pub fn main() !void {
 
     var arena = std.heap.ArenaAllocator.init(gpa.allocator());
     defer arena.deinit();
-    errdefer arena.deinit();
     const allocator = arena.allocator();
     var stdout_buf: [1024]u8 = undefined;
     var stderr_buf: [1024]u8 = undefined;
