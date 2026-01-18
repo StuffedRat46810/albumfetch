@@ -4,8 +4,8 @@
 
 This project is heavily inspired by the Unix program **`fortune`**.
 
-## DISCLAIMER
-this tool was only created as an hobby to waste time and procrastinate on my actual projects. there's a big chance things won't work at your machine.
+> [!WARNING]
+> this tool was only created as an hobby to waste time and procrastinate on my actual projects. there's a big chance things won't work at your machine.
 
 ## Features
 
@@ -15,6 +15,22 @@ this tool was only created as an hobby to waste time and procrastinate on my act
 - **Theming**: Customize the output colors to match your terminal rice.
 
 ## Installation
+
+### Arch Linux (AUR)
+
+For Arch Linux users, albumfetch is available on the AUR:
+
+```bash
+# Using an AUR helper like yay or paru
+yay -S albumfetch
+# OR
+paru -S albumfetch
+
+# Manual installation
+git clone https://aur.archlinux.org/albumfetch. git
+cd albumfetch
+makepkg -si
+```
 
 ### Prerequisites
 You need the [Zig compiler](https://ziglang.org/download/) installed (tested on recent stable versions, e.g., 0.12+).
