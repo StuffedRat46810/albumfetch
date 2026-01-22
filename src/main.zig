@@ -76,27 +76,20 @@ pub fn main() !void {
     if (res) |album| {
         const is_tty = std.fs.File.stdout().isTty();
 
-        if (is_tty) {
-            try logger.printColored("Album", config.theme.label, is_tty);
-            try logger.printColored(album.album_name, config.theme.album, is_tty);
-            try logger.info("\n", .{});
+        try logger.printColored("Album:       ", config.theme.label, is_tty);
+        try logger.printColored(album.album_name, config.theme.album, is_tty);
+        try logger.info("\n", .{});
 
-            try logger.printColored("Artist:     ", config.theme.label, is_tty);
-            try logger.printColored(album.artist, config.theme.artist, is_tty);
-            try logger.info("\n", .{});
+        try logger.printColored("Artist:      ", config.theme.label, is_tty);
+        try logger.printColored(album.artist, config.theme.artist, is_tty);
+        try logger.info("\n", .{});
 
-            try logger.printColored("Genre:      ", config.theme.label, is_tty);
-            try logger.printColored(album.genre, config.theme.genre, is_tty);
-            try logger.info("\n", .{});
+        try logger.printColored("Genre:       ", config.theme.label, is_tty);
+        try logger.printColored(album.genre, config.theme.genre, is_tty);
+        try logger.info("\n", .{});
 
-            try logger.printColored("Year:       ", config.theme.label, is_tty);
-            try logger.printColored(album.year, config.theme.year, is_tty);
-            try logger.info("\n\n", .{});
-        } else {
-            try logger.info("Album: {s}\n", .{album.album_name});
-            try logger.info("Artist: {s}\n", .{album.artist});
-            try logger.info("Genre: {s}\n", .{album.genre});
-            try logger.info("Year: {s}\n", .{album.year});
-        }
+        try logger.printColored("Year:        ", config.theme.label, is_tty);
+        try logger.printColored(album.year, config.theme.year, is_tty);
+        try logger.info("\n", .{});
     }
 }
