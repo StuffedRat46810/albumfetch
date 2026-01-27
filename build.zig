@@ -8,7 +8,7 @@ pub fn build(b: *std.Build) void {
         []const u8,
         "version",
         "Override the version string",
-    ) orelse "0.1.1"; // Fallback version number
+    ) orelse "0.1.2"; // Fallback version number
 
     const build_options = b.addOptions();
     build_options.addOption([]const u8, "version", version);
