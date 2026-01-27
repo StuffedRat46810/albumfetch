@@ -15,13 +15,14 @@ This project is heavily inspired by the Unix program **`fortune`**.
 - **Theming**: Customize the output colors to match your terminal rice.
 
 ## Installation
+### Homebrew
+```bash
+brew tap StuffedRat46810/tap
+brew install albumfetch
+```
 
 ### Arch Linux (AUR)
-
-For Arch Linux users, albumfetch is available on the AUR:
-
 ```bash
-# Using an AUR helper like yay or paru
 yay -S albumfetch
 # OR
 paru -S albumfetch
@@ -33,7 +34,7 @@ makepkg -si
 ```
 
 ### Prerequisites
-You need the [Zig compiler](https://ziglang.org/download/) installed (tested on recent stable versions, e.g., 0.12+).
+You need the [Zig compiler](https://ziglang.org/download/) installed (tested on recent stable versions, e.g., 0.15+).
 
 ### Build from Source
 
