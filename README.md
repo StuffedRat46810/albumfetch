@@ -28,7 +28,7 @@ yay -S albumfetch
 paru -S albumfetch
 
 # Manual installation
-git clone https://aur.archlinux.org/albumfetch. git
+git clone https://aur.archlinux.org/albumfetch.git
 cd albumfetch
 makepkg -si
 ```
