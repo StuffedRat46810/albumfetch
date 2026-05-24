@@ -7,24 +7,24 @@ const AlbumErrors = error{
     null_json,
 };
 pub const AlbumsList = struct {
+    file_buffer: ?[]u8 = null,
     parsed_data: ?std.json.Parsed([][4][]const u8) = null,
     albums: ?[][4][]const u8 = null,
     size: ?usize = null,
 
-    pub fn init(self: *AlbumsList, json_path: ?[]const u8, allocator: std.mem.Allocator) !void {
-        // const file = try std.fs.cwd().readFileAlloc(allocator, "albums.json", 1024 * 1024);
-        const json_path_len = if (json_path) |n| n.len else 0;
-        if (json_path_len == 0) {
+    pub fn init(self: *AlbumsList, json_path: ?[]const u8, allocator: std.mem.Allocator, io: std.Io) !void {
+        const path = json_path orelse return AlbumErrors.null_json;
+        if (path.len == 0) {
             return AlbumErrors.null_json;
         }
-        const file = try std.fs.cwd().openFile(json_path.?, .{ .mode = .read_only });
-        defer file.close();
-        const file_size = try file.getEndPos();
-        const buffer = try allocator.alloc(u8, file_size);
-        errdefer allocator.free(buffer);
-        const bytes_read = try file.readAll(buffer);
-        if (bytes_read != file_size) return error.FileReadIncomplete;
 
+        const cwd = std.Io.Dir.cwd();
+
+        // replaced all manual file operations with buffer
+        const buffer = try cwd.readFileAlloc(io, path, allocator, .unlimited); // no file size limit
+        errdefer allocator.free(buffer);
+
+        self.file_buffer = buffer;
         const AlbumData = [][4][]const u8;
 
         self.parsed_data = try std.json.parseFromSlice(AlbumData, allocator, buffer, .{});
@@ -32,11 +32,11 @@ pub const AlbumsList = struct {
         self.size = self.parsed_data.?.value.len;
     }
 
-    // these two function will probably move into their own struct.
-
-    pub fn getRandomAlbum(self: *AlbumsList) !album_file.Album {
-        var seed: u64 = 0;
-        try std.posix.getrandom(std.mem.asBytes(&seed));
+    pub fn getRandomAlbum(self: *AlbumsList, io: std.Io) !album_file.Album {
+        // create an 8-byte array to hold raw randomness
+        var seed_bytes: [8]u8 = undefined;
+        io.random(std.mem.asBytes(&seed_bytes));
+        const seed = std.mem.readInt(u64, &seed_bytes, .little);
         var prng: std.Random.DefaultPrng = .init(seed);
         const rand = prng.random();
         const index = rand.intRangeLessThan(usize, 0, self.size.?);
@@ -51,9 +51,9 @@ pub const AlbumsList = struct {
             .year = temp[3],
         };
     }
-    pub fn getDailyAlbum(self: *AlbumsList, manual_now: ?i64) !album_file.Album {
-        const now = manual_now orelse std.time.timestamp();
-        const offset_seconds = time.getLocalTimeOffset();
+    pub fn getDailyAlbum(self: *AlbumsList, manual_now: ?i64, io: std.Io) !album_file.Album {
+        const now = manual_now orelse std.Io.Clock.real.now(io).toSeconds();
+        const offset_seconds = time.getLocalTimeOffset(io);
 
         const local_now = now + offset_seconds;
         const seconds_in_day = 86400;
@@ -68,9 +68,12 @@ pub const AlbumsList = struct {
 
         return self.getNthAlbum(index);
     }
-    pub fn deinit(self: *AlbumsList) void {
+    pub fn deinit(self: *AlbumsList, allocator: std.mem.Allocator) void {
         if (self.parsed_data) |p| {
             p.deinit();
+        }
+        if (self.file_buffer) |b| {
+            allocator.free(b);
         }
     }
 };

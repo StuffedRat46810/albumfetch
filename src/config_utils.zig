@@ -9,49 +9,49 @@ pub const Config = struct {
     albums: []const u8,
     theme: Theme = .{},
 
-    pub fn load(allocator: std.mem.Allocator) !std.json.Parsed(Config) {
-        const path = try ensureConfigExists(allocator);
+    pub fn load(allocator: std.mem.Allocator, home: []const u8, io: std.Io) !std.json.Parsed(Config) {
+        const path = try ensureConfigExists(allocator, home, io);
         defer allocator.free(path); // this might cause problems later
+        const cwd = std.Io.Dir.cwd();
 
-        const file = try std.fs.openFileAbsolute(path, .{ .mode = .read_only });
-        defer file.close(); // this might cause problems later
+        const file = try cwd.openFile(io, path, .{ .mode = .read_only });
+        defer file.close(io); // this might cause problems later
 
-        const size = try file.getEndPos();
+        const size = try file.length(io);
         const buffer = try allocator.alloc(u8, size);
         // defer allocator.free(buffer);
-        _ = try file.readAll(buffer);
+        _ = try file.readPositionalAll(io, buffer, 0);
 
         return try std.json.parseFromSlice(Config, allocator, buffer, .{
             .ignore_unknown_fields = true,
         });
     }
 
-    fn ensureConfigExists(environ_map: std.process.Init.Minimal.environ_map, allocator: std.mem.Allocator) ![]u8 {
-        // retrieves user's home directory
-        const home = try 
-        defer allocator.free(home);
-
+    fn ensureConfigExists(allocator: std.mem.Allocator, home: []const u8, io: std.Io) ![]u8 {
         // builds ~/.config/albumfetch
         const config_dir_path = try std.fs.path.join(allocator, &[_][]const u8{ home, ".config", "albumfetch" });
+        defer allocator.free(config_dir_path);
         const config_file_path = try std.fs.path.join(allocator, &[_][]const u8{ config_dir_path, "config.json" });
         const default_albums_path = try std.fs.path.join(allocator, &[_][]const u8{ config_dir_path, "albums.json" });
+        defer allocator.free(default_albums_path);
 
-        std.fs.cwd().makePath(config_dir_path) catch |err| {
+        const cwd = std.Io.Dir.cwd();
+        cwd.createDirPath(io, config_dir_path) catch |err| {
             if (err != error.PathAlreadyExists) return err;
         };
 
-        std.fs.accessAbsolute(default_albums_path, .{}) catch |err| {
+        cwd.access(io, default_albums_path, .{}) catch |err| {
             if (err == error.FileNotFound) {
-                const new_file = try std.fs.createFileAbsolute(default_albums_path, .{});
-                defer new_file.close();
-                try new_file.writeAll(default_data);
+                const new_file = try cwd.createFile(io, default_albums_path, .{});
+                defer new_file.close(io);
+                _ = try new_file.writePositionalAll(io, default_data, 0);
             } else return err;
         };
 
-        std.fs.accessAbsolute(config_file_path, .{}) catch |err| {
+        cwd.access(io, config_file_path, .{}) catch |err| {
             if (err == error.FileNotFound) {
-                const f = try std.fs.createFileAbsolute(config_file_path, .{});
-                defer f.close();
+                const f = try cwd.createFile(io, config_file_path, .{});
+                defer f.close(io);
                 const template = try std.fmt.allocPrint(allocator,
                     \\{{
                     \\  "albums": "{s}",
@@ -64,7 +64,8 @@ pub const Config = struct {
                     \\  }}
                     \\}}
                 , .{default_albums_path});
-                try f.writeAll(template);
+                defer allocator.free(template);
+                try f.writePositionalAll(io, template, 0);
             } else return err;
         };
         return config_file_path;

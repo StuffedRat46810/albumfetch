@@ -41,7 +41,12 @@ pub fn main(init: std.process.Init) !void {
         return;
     }
 
-    const config_parsed = config_utils.Config.load(allocator) catch |err| {
+    const home = init.environ_map.get("HOME") orelse {
+        try logger.err("Fatal error: HOME environment variable is not set.\n", .{});
+        return;
+    };
+
+    const config_parsed = config_utils.Config.load(allocator, home, init.io) catch |err| {
         try logger.err("Fatal error: could not load or create config: {}\n", .{err});
         return;
     };
@@ -50,7 +55,7 @@ pub fn main(init: std.process.Init) !void {
 
     var albums = albums_utils.AlbumsList{};
 
-    albums.init(config.albums, allocator) catch |err| {
+    albums.init(config.albums, allocator, init.io) catch |err| {
         try logger.err("ERROR: albums.init() has failed: {}\n", .{err});
         return;
     };
@@ -58,13 +63,13 @@ pub fn main(init: std.process.Init) !void {
     var res: ?Album = null;
 
     if (args.is_random) {
-        res = try albums.getRandomAlbum();
+        res = try albums.getRandomAlbum(init.io);
     } else if (args.is_daily) {
-        res = try albums.getDailyAlbum(null);
+        res = try albums.getDailyAlbum(null, init.io);
     }
 
     if (res) |album| {
-        const is_tty = std.fs.File.stdout().isTty();
+        const is_tty = try std.Io.File.stdout().isTty(init.io);
 
         try logger.printColored("Album:       ", config.theme.label, is_tty);
         try logger.printColored(album.album_name, config.theme.album, is_tty);
