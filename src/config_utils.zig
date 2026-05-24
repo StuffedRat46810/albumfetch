@@ -5,11 +5,22 @@ const default_data = @embedFile("albums.json");
 const Color = color_utils.Color;
 const Theme = color_utils.Theme;
 
+pub const ParsedConfig = struct {
+    value: Config,
+    parsed: std.json.Parsed(Config),
+    buffer: []u8,
+    allocator: std.mem.Allocator,
+
+    pub fn deinit(self: *@This()) void {
+        self.parsed.deinit();
+        self.allocator.free(self.buffer);
+    }
+};
 pub const Config = struct {
     albums: []const u8,
     theme: Theme = .{},
 
-    pub fn load(allocator: std.mem.Allocator, home: []const u8, io: std.Io) !std.json.Parsed(Config) {
+    pub fn load(allocator: std.mem.Allocator, home: []const u8, io: std.Io) !ParsedConfig {
         const path = try ensureConfigExists(allocator, home, io);
         defer allocator.free(path); // this might cause problems later
         const cwd = std.Io.Dir.cwd();
@@ -19,12 +30,20 @@ pub const Config = struct {
 
         const size = try file.length(io);
         const buffer = try allocator.alloc(u8, size);
-        // defer allocator.free(buffer);
+
+        errdefer allocator.free(buffer);
         _ = try file.readPositionalAll(io, buffer, 0);
 
-        return try std.json.parseFromSlice(Config, allocator, buffer, .{
+        const parsed = try std.json.parseFromSlice(Config, allocator, buffer, .{
             .ignore_unknown_fields = true,
         });
+
+        return ParsedConfig{
+            .value = parsed.value,
+            .parsed = parsed,
+            .buffer = buffer,
+            .allocator = allocator,
+        };
     }
 
     fn ensureConfigExists(allocator: std.mem.Allocator, home: []const u8, io: std.Io) ![]u8 {

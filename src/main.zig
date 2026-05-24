@@ -1,12 +1,11 @@
 const std = @import("std");
 const print = std.debug.print;
-const album_file = @import("album.zig");
 const build_options = @import("build_options");
 const albums_utils = @import("album_utils.zig");
 const config_utils = @import("config_utils.zig");
 const log_file = @import("logger.zig");
 const parser = @import("parser.zig");
-const Album = album_file.Album;
+const Album = albums_utils.Album;
 
 pub const reset = "\x1b[0m";
 pub const version = build_options.version;
@@ -46,7 +45,7 @@ pub fn main(init: std.process.Init) !void {
         return;
     };
 
-    const config_parsed = config_utils.Config.load(allocator, home, init.io) catch |err| {
+    var config_parsed = config_utils.Config.load(allocator, home, init.io) catch |err| {
         try logger.err("Fatal error: could not load or create config: {}\n", .{err});
         return;
     };
