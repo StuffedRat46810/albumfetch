@@ -1,5 +1,10 @@
 const std = @import("std");
-const album_file = @import("album.zig");
+pub const Album = struct {
+    artist: []const u8,
+    album_name: []const u8,
+    genre: []const u8,
+    year: []const u8,
+};
 const AlbumErrors = error{
     file_error,
     json_error,
@@ -31,7 +36,7 @@ pub const AlbumsList = struct {
         self.size = self.parsed_data.?.value.len;
     }
 
-    pub fn getRandomAlbum(self: *AlbumsList, io: std.Io) !album_file.Album {
+    pub fn getRandomAlbum(self: *AlbumsList, io: std.Io) !Album {
         // create an 8-byte array to hold raw randomness
         var seed_bytes: [8]u8 = undefined;
         io.random(std.mem.asBytes(&seed_bytes));
@@ -41,16 +46,16 @@ pub const AlbumsList = struct {
         const index = rand.intRangeLessThan(usize, 0, self.size.?);
         return self.getNthAlbum(index);
     }
-    pub fn getNthAlbum(self: *AlbumsList, n: usize) album_file.Album {
+    pub fn getNthAlbum(self: *AlbumsList, n: usize) Album {
         const temp = self.albums.?[n];
-        return album_file.Album{
+        return Album{
             .album_name = temp[0],
             .artist = temp[1],
             .genre = temp[2],
             .year = temp[3],
         };
     }
-    pub fn getDailyAlbum(self: *AlbumsList, manual_now: ?i64, io: std.Io) !album_file.Album {
+    pub fn getDailyAlbum(self: *AlbumsList, manual_now: ?i64, io: std.Io) !Album {
         const now = manual_now orelse std.Io.Clock.real.now(io).toSeconds();
 
         const seconds_in_day = 86400;
