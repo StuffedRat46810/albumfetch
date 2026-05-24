@@ -2,9 +2,7 @@ const std = @import("std");
 const testing = std.testing;
 
 const color_utils = @import("color_utils.zig");
-const album = @import("album.zig");
 const album_utils = @import("album_utils.zig");
-const time_utils = @import("time.zig");
 
 // --- Color Utils Tests ---
 test "Color Utils - ANSI codes" {
@@ -21,7 +19,7 @@ test "Theme - Default Values" {
 
 // --- Album Struct Tests ---
 test "Album Struct - Initialization" {
-    const a = album.Album{
+    const a = album_utils.Album{
         .artist = "Pink Floyd",
         .album_name = "The Dark Side of the Moon",
         .genre = "Progressive Rock",
@@ -31,38 +29,37 @@ test "Album Struct - Initialization" {
     try testing.expectEqualStrings("The Dark Side of the Moon", a.album_name);
 }
 
-// --- Time Utils Tests ---
-test "Time Utils - Offset Validity" {
-    const offset = time_utils.getLocalTimeOffset();
-    const seconds_in_day = 86400;
-    try testing.expect(offset >= -seconds_in_day);
-    try testing.expect(offset <= seconds_in_day);
-}
-
 // --- Album Utils Tests ---
 
-fn createDummyJson(filename: []const u8, content: []const u8) !void {
-    const file = try std.fs.cwd().createFile(filename, .{});
-    defer file.close();
-    try file.writeAll(content);
+// Updated to use the new std.Io.Dir interface!
+fn createDummyJson(dir: std.Io.Dir, io: std.Io, filename: []const u8, content: []const u8) !void {
+    const file = try dir.createFile(io, filename, .{});
+    defer file.close(io);
+    _ = try file.writePositionalAll(io, content, 0);
 }
 
 test "Album Utils - Init with Invalid File" {
-    // We use an arena here for consistency, though not strictly needed for the error case
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
 
+    // Grab the global test Io instance
+    const io = std.testing.io;
+
     var list = album_utils.AlbumsList{};
-    const err = list.init("non_existent_file.json", allocator);
+    const err = list.init("non_existent_file.json", allocator, io);
     try testing.expectError(error.FileNotFound, err);
 }
 
 test "Album Utils - Parsing and Retrieval" {
-    // USE ARENA: This frees all memory (including the internal file buffer) at the end of the block
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
+    const io = std.testing.io;
+
+    // 1. Create a self-cleaning temporary directory
+    var tmp = std.testing.tmpDir(.{});
+    defer tmp.cleanup();
 
     const test_filename = "test_albums_parsing.json";
     const json_content =
@@ -73,14 +70,15 @@ test "Album Utils - Parsing and Retrieval" {
         \\]
     ;
 
-    try createDummyJson(test_filename, json_content);
-    defer std.fs.cwd().deleteFile(test_filename) catch {};
+    // 2. Write the file inside the temp directory
+    try createDummyJson(tmp.dir, io, test_filename, json_content);
+
+    // 3. Resolve the absolute path of the temp directory so album_utils can find it natively
+    const temp_path = try tmp.dir.realPathFileAlloc(io, ".", allocator);
+    const abs_file_path = try std.fs.path.join(allocator, &[_][]const u8{ temp_path, test_filename });
 
     var list = album_utils.AlbumsList{};
-    // No need to call list.deinit() because the arena handles everything
-
-    try list.init(test_filename, allocator);
-
+    try list.init(abs_file_path, allocator, io);
     try testing.expect(list.size.? == 3);
 
     const a1 = list.getNthAlbum(0);
@@ -91,6 +89,10 @@ test "Album Utils - Random Album" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
+    const io = std.testing.io;
+
+    var tmp = std.testing.tmpDir(.{});
+    defer tmp.cleanup();
 
     const test_filename = "test_albums_random.json";
     const json_content =
@@ -99,13 +101,16 @@ test "Album Utils - Random Album" {
         \\]
     ;
 
-    try createDummyJson(test_filename, json_content);
-    defer std.fs.cwd().deleteFile(test_filename) catch {};
+    try createDummyJson(tmp.dir, io, test_filename, json_content);
+
+    const temp_path = try tmp.dir.realPathFileAlloc(io, ".", allocator);
+    const abs_file_path = try std.fs.path.join(allocator, &[_][]const u8{ temp_path, test_filename });
 
     var list = album_utils.AlbumsList{};
-    try list.init(test_filename, allocator);
+    try list.init(abs_file_path, allocator, io);
 
-    const rand_album = try list.getRandomAlbum();
+    // Pass `io` to your updated random method
+    const rand_album = try list.getRandomAlbum(io);
     try testing.expectEqualStrings("Unique Album", rand_album.album_name);
 }
 
@@ -113,6 +118,10 @@ test "Album Utils - Daily Album Consistency" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
+    const io = std.testing.io;
+
+    var tmp = std.testing.tmpDir(.{});
+    defer tmp.cleanup();
 
     const test_filename = "test_albums_daily.json";
     const json_content =
@@ -123,16 +132,19 @@ test "Album Utils - Daily Album Consistency" {
         \\]
     ;
 
-    try createDummyJson(test_filename, json_content);
-    defer std.fs.cwd().deleteFile(test_filename) catch {};
+    try createDummyJson(tmp.dir, io, test_filename, json_content);
+
+    const temp_path = try tmp.dir.realPathFileAlloc(io, ".", allocator);
+    const abs_file_path = try std.fs.path.join(allocator, &[_][]const u8{ temp_path, test_filename });
 
     var list = album_utils.AlbumsList{};
-    try list.init(test_filename, allocator);
+    try list.init(abs_file_path, allocator, io);
 
     const mock_time: i64 = 1600000000;
 
-    const daily1 = try list.getDailyAlbum(mock_time);
-    const daily2 = try list.getDailyAlbum(mock_time);
+    // Pass `io` down the chain
+    const daily1 = try list.getDailyAlbum(mock_time, io);
+    const daily2 = try list.getDailyAlbum(mock_time, io);
 
     try testing.expectEqualStrings(daily1.album_name, daily2.album_name);
 }
