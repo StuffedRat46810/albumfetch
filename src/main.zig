@@ -37,7 +37,7 @@ pub fn main(init: std.process.Init) !void {
     }
 
     if (args.is_version) {
-        try logger.err("albumfetch version {s}\n", .{version});
+        try logger.err("{s}\n", .{version});
         return;
     }
 
