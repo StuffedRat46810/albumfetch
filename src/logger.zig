@@ -2,20 +2,20 @@ const std = @import("std");
 const color_utils = @import("color_utils.zig");
 const Color = color_utils.Color;
 
-// this struct exists as a workaround for printing to stdout or stderr.
-// hopefully when zig 0.16 will release this problem will be solved.
 pub const Logger = struct {
+    io: std.Io,
     stdout_buf: []u8,
     stderr_buf: []u8,
-    stdout_writer: std.fs.File.Writer,
-    stderr_writer: std.fs.File.Writer,
+    stdout_writer: std.Io.File.Writer,
+    stderr_writer: std.Io.File.Writer,
 
-    pub fn init(stdout_buf: []u8, stderr_buf: []u8) Logger {
+    pub fn init(io: std.Io, stdout_buf: []u8, stderr_buf: []u8) Logger {
         return Logger{
+            .io = io,
             .stdout_buf = stdout_buf,
             .stderr_buf = stderr_buf,
-            .stdout_writer = std.fs.File.stdout().writer(stdout_buf),
-            .stderr_writer = std.fs.File.stderr().writer(stderr_buf),
+            .stdout_writer = std.Io.File.stdout().writer(io, stdout_buf),
+            .stderr_writer = std.Io.File.stderr().writer(io, stderr_buf),
         };
     }
 

@@ -11,16 +11,15 @@ const Album = album_file.Album;
 pub const reset = "\x1b[0m";
 pub const version = build_options.version;
 
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+pub fn main(init: std.process.Init) !void {
+    const gpa = init.gpa;
 
-    var arena = std.heap.ArenaAllocator.init(gpa.allocator());
+    var arena = std.heap.ArenaAllocator.init(gpa);
     defer arena.deinit();
     const allocator = arena.allocator();
     var stdout_buf: [1024]u8 = undefined;
     var stderr_buf: [1024]u8 = undefined;
-    var logger = log_file.Logger.init(&stdout_buf, &stderr_buf);
+    var logger = log_file.Logger.init(init.io, &stdout_buf, &stderr_buf);
     defer logger.flush() catch {};
 
     const params = comptime clap.parseParamsComptime(
