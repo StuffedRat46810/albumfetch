@@ -5,47 +5,38 @@ const build_options = @import("build_options");
 const albums_utils = @import("album_utils.zig");
 const config_utils = @import("config_utils.zig");
 const log_file = @import("logger.zig");
-const clap = @import("clap");
+const parser = @import("parser.zig");
 const Album = album_file.Album;
 
 pub const reset = "\x1b[0m";
 pub const version = build_options.version;
 
 pub fn main(init: std.process.Init) !void {
-    const gpa = init.gpa;
-
-    var arena = std.heap.ArenaAllocator.init(gpa);
-    defer arena.deinit();
-    const allocator = arena.allocator();
+    const allocator = init.arena.allocator();
     var stdout_buf: [1024]u8 = undefined;
     var stderr_buf: [1024]u8 = undefined;
     var logger = log_file.Logger.init(init.io, &stdout_buf, &stderr_buf);
     defer logger.flush() catch {};
 
-    const params = comptime clap.parseParamsComptime(
-        \\-h, --help        Display this help and exit.
-        \\-d, --daily       Display daily random album. 
-        \\-r, --random      Pick a random album instead of the daily one.
-        \\-v, --version     Output version information and exit.
-    );
+    const raw_args = try init.minimal.args.toSlice(allocator);
 
-    var argsRes = clap.parse(clap.Help, &params, clap.parsers.default, .{
-        .allocator = allocator,
-    }) catch |err| {
-        try logger.err("Error parsing arguments: {}\n", .{err});
-        return;
-    };
-    defer argsRes.deinit();
+    const args = parser.parse(raw_args, &logger) catch return;
 
-    const args_count = std.os.argv.len;
-
-    if (argsRes.args.help != 0 or args_count == 1) {
-        try logger.info("Usage: albumfetch [options]\n", .{});
-        try clap.help(&logger.stderr_writer.interface, clap.Help, &params, .{});
+    if (args.is_help or !args.has_args) {
+        try logger.info(
+            \\Usage: albumfetch [options]
+            \\
+            \\Options:
+            \\  -h, --help        Display this help and exit.
+            \\  -d, --daily       Display daily random album. 
+            \\  -r, --random      Pick a random album instead of the daily one.
+            \\  -v, --version     Output version information and exit.
+            \\
+        , .{});
         return;
     }
 
-    if (argsRes.args.version != 0) {
+    if (args.is_version) {
         try logger.err("albumfetch version {s}\n", .{version});
         return;
     }
@@ -66,9 +57,9 @@ pub fn main(init: std.process.Init) !void {
 
     var res: ?Album = null;
 
-    if (argsRes.args.random != 0) {
+    if (args.is_random) {
         res = try albums.getRandomAlbum();
-    } else if (argsRes.args.daily != 0) {
+    } else if (args.is_daily) {
         res = try albums.getDailyAlbum(null);
     }
 

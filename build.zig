@@ -3,12 +3,11 @@ const std = @import("std");
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
-    const clap = b.dependency("clap", .{});
     const version = b.option(
         []const u8,
         "version",
         "Override the version string",
-    ) orelse "0.1.2"; // Fallback version number
+    ) orelse "0.1.3"; // Fallback version number
 
     const build_options = b.addOptions();
     build_options.addOption([]const u8, "version", version);
@@ -34,7 +33,6 @@ pub fn build(b: *std.Build) void {
 
     exe.root_module.addImport("album_utils", album_utils_mod);
     exe.root_module.addImport("config_utils", config_utils_mod);
-    exe.root_module.addImport("clap", clap.module("clap"));
     exe.root_module.addImport("build_options", build_options.createModule());
 
     if (optimize != .Debug) {

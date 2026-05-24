@@ -26,9 +26,9 @@ pub const Config = struct {
         });
     }
 
-    fn ensureConfigExists(allocator: std.mem.Allocator) ![]u8 {
+    fn ensureConfigExists(environ_map: std.process.Init.Minimal.environ_map, allocator: std.mem.Allocator) ![]u8 {
         // retrieves user's home directory
-        const home = try std.process.getEnvVarOwned(allocator, "HOME");
+        const home = try 
         defer allocator.free(home);
 
         // builds ~/.config/albumfetch
