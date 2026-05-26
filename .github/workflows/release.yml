@@ -23,9 +23,9 @@ jobs:
         # It forces the CI step to fail immediately if any single distro test fails.
         run: docker compose up --build --abort-on-container-exit
 
-  # ==========================================
-  # JOB 2: Build the Release Binaries
-  # ==========================================
+        # ==========================================
+        # JOB 2: Build the Release Binaries
+        # ==========================================
   build:
     name: Compile Binaries
     needs: test # Only runs if the tests pass
@@ -62,9 +62,9 @@ jobs:
           name: albumfetch-${{ matrix.target }}
           path: release/*.tar.gz
 
-  # ==========================================
-  # JOB 3: Publish the GitHub Release
-  # ==========================================
+          # ==========================================
+          # JOB 3: Publish the GitHub Release
+          # ==========================================
   release:
     name: Publish Release
     needs: build
@@ -83,6 +83,7 @@ jobs:
         with:
           files: artifacts/*.tar.gz
           generate_release_notes: true
+
   update-homebrew:
     name: Update Homebrew Formula
     needs: release # Waits for the GitHub Release to be published
