@@ -101,7 +101,7 @@ jobs:
           # The name of your formula file
           formula-name: albumfetch
           # The repository where your tap lives (e.g., your-username/homebrew-tap)
-          homebrew-tap: your-username/homebrew-tap
+          homebrew-tap: StuffedRat46810/homebrew-tap
           download-url: https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/albumfetch-x86_64-macos-none.tar.gz
           commit-message: "brew: bump albumfetch to ${{ github.ref_name }}"
         env:
