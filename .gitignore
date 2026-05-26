@@ -24,3 +24,11 @@ Desktop.ini
 *.so
 *.dylib
 albumfetch
+
+# Ignore downloaded compiler toolchains
+zig-linux-*
+zig-macos-*
+*.tar.xz
+
+# Ignore release artifacts
+release/

@@ -1,0 +1,53 @@
+services:
+  # 1. The Builder: Compiles the source code first
+  builder:
+    image: alpine:latest
+    volumes:
+      - ../:/app
+    working_dir: /app
+    command:
+      - /bin/sh
+      - -c
+      - |
+        apk add --no-cache curl xz jq
+        
+        # Dynamically fetch the latest master build for Linux x86_64
+        ZIG_URL=$$(curl -s https://ziglang.org/download/index.json | jq -r '.master."x86_64-linux".tarball')
+        echo "Downloading Zig from $$ZIG_URL"
+        
+        curl -O $$ZIG_URL
+        tar -xf zig-linux-x86_64-*.tar.xz
+        mv zig-linux-x86_64-* /usr/local/zig
+        
+        # Build the static binary
+        /usr/local/zig/zig build -Dtarget=x86_64-linux-musl -Doptimize=ReleaseSafe
+  # 2. The Testers: Wait for the builder, then run the binary
+  alpine-test:
+    image: alpine:latest
+    depends_on:
+      builder:
+        condition: service_completed_successfully
+    volumes:
+      - ../:/app
+      - .:/tests
+    command: /bin/sh -c "/tests/smoke_test.sh"
+
+  arch-test:
+    image: archlinux:latest
+    depends_on:
+      builder:
+        condition: service_completed_successfully
+    volumes:
+      - ../:/app
+      - .:/tests
+    command: /bin/sh -c "/tests/smoke_test.sh"
+
+  fedora-test:
+    image: fedora:latest
+    depends_on:
+      builder:
+        condition: service_completed_successfully
+    volumes:
+      - ../:/app
+      - .:/tests
+    command: /bin/sh -c "/tests/smoke_test.sh"

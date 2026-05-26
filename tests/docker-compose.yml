@@ -1,0 +1,64 @@
+services:
+  # 1. The Optimized Builder
+  builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.builder
+    volumes:
+      - ../:/app
+    working_dir: /app
+    # Because Zig is already installed in the image, the runtime command is just the build step
+    command: zig build -Dtarget=x86_64-linux-musl -Doptimize=ReleaseSafe
+
+  # 2. The Test Matrix
+  alpine-test:
+    image: alpine:latest
+    depends_on:
+      builder:
+        condition: service_completed_successfully
+    volumes:
+      - ../:/app
+      - .:/tests
+    command: /bin/sh -c "/tests/smoke_test.sh"
+
+  arch-test:
+    image: archlinux:latest
+    depends_on:
+      builder:
+        condition: service_completed_successfully
+    volumes:
+      - ../:/app
+      - .:/tests
+    command: /bin/sh -c "/tests/smoke_test.sh"
+
+  fedora-test:
+    image: fedora:latest
+    depends_on:
+      builder:
+        condition: service_completed_successfully
+    volumes:
+      - ../:/app
+      - .:/tests
+    command: /bin/sh -c "/tests/smoke_test.sh"
+
+  # --- NEW DISTRIBUTIONS ---
+  
+  ubuntu-test:
+    image: ubuntu:latest
+    depends_on:
+      builder:
+        condition: service_completed_successfully
+    volumes:
+      - ../:/app
+      - .:/tests
+    command: /bin/sh -c "/tests/smoke_test.sh"
+
+  debian-test:
+    image: debian:latest
+    depends_on:
+      builder:
+        condition: service_completed_successfully
+    volumes:
+      - ../:/app
+      - .:/tests
+    command: /bin/sh -c "/tests/smoke_test.sh"
