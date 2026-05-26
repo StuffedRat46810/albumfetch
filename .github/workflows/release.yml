@@ -117,7 +117,7 @@ jobs:
       - name: Publish to AUR
         uses: KSXGitHub/github-actions-deploy-aur@v3.0.1
         with:
-          pkgname: albumfetch-bin
+          pkgname: albumfetch
           pkgbuild: ./PKGBUILD # Path to the PKGBUILD inside your repo
           commit_username: ${{ github.actor }}
           commit_email: ${{ github.actor }}@users.noreply.github.com
