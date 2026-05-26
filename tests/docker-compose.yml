@@ -2,8 +2,8 @@ services:
   # 1. The Optimized Builder
   builder:
     build:
-      context: .
-      dockerfile: Dockerfile.builder
+      context: ..
+      dockerfile: tests/Dockerfile.builder
     volumes:
       - ../:/app
     working_dir: /app

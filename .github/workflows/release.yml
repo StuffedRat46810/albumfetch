@@ -43,10 +43,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Zig
-        uses: mlugg/setup-zig@v1
-        with:
-          version: 0.16.0
+      - name: Read Zig version
+        run: echo "ZIG_VER=$(cat .zig-version)" >> $GITHUB_ENV
+
+      - name: Install Zig
+        run: |
+          ZIG_URL=$(curl -s https://ziglang.org/download/index.json | jq -r ".[\"${{ env.ZIG_VER }}\"][\"x86_64-linux\"][\"tarball\"]")
+          curl -o zig.tar.xz $ZIG_URL
+          mkdir -p $HOME/zig
+          tar -xf zig.tar.xz -C $HOME/zig --strip-components=1
+          echo "$HOME/zig" >> $GITHUB_PATH
 
       - name: Build binary
         run: zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseSafe

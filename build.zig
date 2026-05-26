@@ -1,13 +1,16 @@
 const std = @import("std");
 
 pub fn build(b: *std.Build) void {
+    const default_version = std.mem.trim(u8, @embedFile("version.txt"), " \n\r\t");
+
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
+
     const version = b.option(
         []const u8,
         "version",
         "Override the version string",
-    ) orelse "0.1.3"; // Fallback version number
+    ) orelse default_version; // Fallback version number
 
     const build_options = b.addOptions();
     build_options.addOption([]const u8, "version", version);
